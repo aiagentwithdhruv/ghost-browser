@@ -87,6 +87,91 @@ Watch the browser come alive — 6 stages, zero human input:
 
 ---
 
+## Architecture
+
+```
+ ANTI-DETECT                AGENTS                 PLATFORMS
++-------------------+   +------------------+   +-------------------------+
+|                   |   |                  |   |                         |
+| +---------------+ |   | +--------------+ |   | +----------+           |
+| | Human         |------>| LinkedIn     |------>| LinkedIn | Post,Like |
+| | Behavior      | |   | | Agent        | |   | |          | Comment   |
+| |               | |   | +--------------+ |   | +----------+ Apply    |
+| | gaussian delay| |   | +--------------+ |   | +----------+           |
+| | typos+correct | |   | | Scraper      |------>| Indeed   | 32 jobs   |
+| | smooth scroll | |   | | Agent        |--+ |  | +----------+           |
+| +---------------+ |   | +--------------+ | |  | +----------+           |
+|                   |   | +--------------+ | +-->| Google   | 11 biz    |
+| +---------------+ |   | | Job          | |   | | Maps     |           |
+| | Base          |------>| Agent        | |   | +----------+           |
+| | Browser       | |   | +--------------+ |   | +----------+           |
+| |               | |   | +--------------+ |   | |MonkeyType| 412 WPM  |
+| | Playwright    | |   | | Demo         |------>|          | 100% acc  |
+| | + Cookies     | |   | | Agent        | |   | +----------+           |
+| +---------------+ |   | +--------------+ |   | +----------+           |
+|                   |   | +--------------+ |   | |Any       |           |
+|                   |   | | Stats        | |   | |Website   |           |
+|                   |   | | Tracker      | |   | +----------+           |
++-------------------+   +--------+-------+   +-------------------------+
+                                  |
+                        +- - - - -v- - - - -+
+                        | CLI:               |
+                        | linkedin_engage.py |
+                        +- - - - - - - - - -+
+
+             15 scripts | 3000+ lines | Built with Claude Code
+```
+
+<details>
+<summary>Interactive diagram (click to expand)</summary>
+
+```mermaid
+graph LR
+    subgraph Anti-Detect["ANTI-DETECT"]
+        HB["Human Behavior<br/>Gaussian delays<br/>Typos + corrections<br/>Smooth scrolling"]
+        BB["Base Browser<br/>Playwright + Cookies"]
+    end
+
+    subgraph Agents["AGENTS"]
+        LA["LinkedIn Agent"]
+        SA["Scraper Agent"]
+        JA["Job Agent"]
+        DA["Demo Agent"]
+        ST["Stats Tracker"]
+    end
+
+    subgraph Platforms["PLATFORMS"]
+        LI["LinkedIn"]
+        IN["Indeed"]
+        GM["Google Maps"]
+        MT["MonkeyType"]
+        AW["Any Website"]
+    end
+
+    HB --> LA
+    HB --> SA
+    BB --> LA
+    BB --> SA
+    LA --> LI
+    SA --> IN
+    SA --> GM
+    JA --> IN
+    JA --> LI
+    DA --> MT
+    ST --> LI
+
+    CLI["CLI: linkedin_engage.py"] -.-> Agents
+
+    style Anti-Detect fill:#1e3a5f,stroke:#4a9eed,color:#e5e5e5
+    style Agents fill:#2d1b69,stroke:#8b5cf6,color:#e5e5e5
+    style Platforms fill:#1a4d2e,stroke:#22c55e,color:#e5e5e5
+    style CLI fill:transparent,stroke:#06b6d4,color:#06b6d4,stroke-dasharray: 5 5
+```
+
+</details>
+
+---
+
 ## Quick Start
 
 ```bash
@@ -179,105 +264,6 @@ python3 job_research.py
 ---
 
 ## How It Works
-
-### Architecture
-
-```
-┌─────────────────────┐     ┌──────────────────┐     ┌─────────────────────────────┐
-│   🛡️ ANTI-DETECT     │     │   🤖 AGENTS       │     │   🌐 PLATFORMS               │
-│                     │     │                  │     │                             │
-│  ┌───────────────┐  │     │  ┌────────────┐  │     │  ┌──────────┐              │
-│  │Human Behavior │──┼────►│  │  LinkedIn   │──┼────►│  │ LinkedIn │ Post, Like   │
-│  │               │  │     │  │  Agent      │  │     │  │          │ Comment,Apply│
-│  │ gaussian delay│  │     │  └────────────┘  │     │  └──────────┘              │
-│  │ typos+correct │  │     │  ┌────────────┐  │     │  ┌──────────┐              │
-│  │ smooth scroll │  │     │  │  Scraper    │──┼────►│  │  Indeed  │ 32 jobs      │
-│  └───────────────┘  │     │  │  Agent      │──┼──┐ │  └──────────┘              │
-│                     │     │  └────────────┘  │  │ │  ┌──────────┐              │
-│  ┌───────────────┐  │     │  ┌────────────┐  │  └►│  │Google Map│ 11 biz       │
-│  │ Base Browser  │──┼────►│  │  Job Agent  │  │     │  └──────────┘              │
-│  │               │  │     │  └────────────┘  │     │  ┌──────────┐              │
-│  │ Playwright    │  │     │  ┌────────────┐  │     │  │MonkeyType│ 412 WPM      │
-│  │ + Cookies     │  │     │  │ Demo Agent  │──┼────►│  │          │ 100% acc     │
-│  └───────────────┘  │     │  └────────────┘  │     │  └──────────┘              │
-│                     │     │  ┌────────────┐  │     │  ┌──────────┐              │
-│                     │     │  │Stats Tracker│  │     │  │Any Website│             │
-│                     │     │  └────────────┘  │     │  └──────────┘              │
-└─────────────────────┘     └────────┬─────────┘     └─────────────────────────────┘
-                                     │
-                            ┌ ─ ─ ─ ─▼─ ─ ─ ─ ─ ┐
-                              CLI: linkedin_engage.py
-                            └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
-
-              15 scripts │ 3000+ lines │ Built with Claude Code
-```
-
-<details>
-<summary>Interactive diagram (click to expand)</summary>
-
-```mermaid
-graph LR
-    subgraph Anti-Detect["🛡️ ANTI-DETECT"]
-        HB["Human Behavior<br/><i>Gaussian delays<br/>Typos & corrections<br/>Smooth scrolling</i>"]
-        BB["Base Browser<br/><i>Playwright + Cookies<br/>Context manager</i>"]
-    end
-
-    subgraph Agents["🤖 AGENTS"]
-        LA["LinkedIn Agent"]
-        SA["Scraper Agent"]
-        JA["Job Agent"]
-        DA["Demo Agent"]
-        ST["Stats Tracker"]
-    end
-
-    subgraph Platforms["🌐 PLATFORMS"]
-        LI["LinkedIn<br/><i>Post, Like, Comment, Apply</i>"]
-        IN["Indeed<br/><i>32 jobs scraped</i>"]
-        GM["Google Maps<br/><i>11 biz scraped</i>"]
-        MT["MonkeyType<br/><i>412 WPM · 100% acc</i>"]
-        AW["Any Website"]
-    end
-
-    HB --> LA
-    HB --> SA
-    BB --> LA
-    BB --> SA
-    LA --> LI
-    SA --> IN
-    SA --> GM
-    JA --> IN
-    JA --> LI
-    DA --> MT
-    ST --> LI
-
-    CLI["⌨️ CLI: linkedin_engage.py"] -.-> Agents
-
-    style Anti-Detect fill:#1e3a5f,stroke:#4a9eed,color:#e5e5e5
-    style Agents fill:#2d1b69,stroke:#8b5cf6,color:#e5e5e5
-    style Platforms fill:#1a4d2e,stroke:#22c55e,color:#e5e5e5
-    style CLI fill:transparent,stroke:#06b6d4,color:#06b6d4,stroke-dasharray: 5 5
-```
-
-</details>
-
-**File hierarchy:**
-```
-human_behavior.py          ← Anti-detection: random delays, human typing, smooth scrolling
-    ↓
-base_browser.py            ← Playwright wrapper: cookie auth, navigation, screenshots
-    ↓
-├── linkedin_browser.py    ← LinkedIn: post, like, comment, apply, connect
-├── linkedin_scraper.py    ← LinkedIn: followers, connections, post analytics
-├── twitter_scraper.py     ← Twitter: followers, impressions
-├── youtube_stats.py       ← YouTube API (no browser needed)
-├── universal_scraper.py   ← Scrape ANY website with presets
-└── screenshot_tool.py     ← Screenshot any URL
-    ↓
-├── linkedin_engage.py     ← CLI for all LinkedIn actions
-├── stats_tracker.py       ← Master stats orchestrator
-├── demo_wow.py            ← The viral demo
-└── job_research.py        ← Job market research
-```
 
 ### Human-Like Behavior Engine
 
