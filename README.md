@@ -89,42 +89,6 @@ Watch the browser come alive — 6 stages, zero human input:
 
 ## Architecture
 
-```
- ANTI-DETECT                AGENTS                 PLATFORMS
-+-------------------+   +------------------+   +-------------------------+
-|                   |   |                  |   |                         |
-| +---------------+ |   | +--------------+ |   | +----------+           |
-| | Human         |------>| LinkedIn     |------>| LinkedIn | Post,Like |
-| | Behavior      | |   | | Agent        | |   | |          | Comment   |
-| |               | |   | +--------------+ |   | +----------+ Apply    |
-| | gaussian delay| |   | +--------------+ |   | +----------+           |
-| | typos+correct | |   | | Scraper      |------>| Indeed   | 32 jobs   |
-| | smooth scroll | |   | | Agent        |--+ |  | +----------+           |
-| +---------------+ |   | +--------------+ | |  | +----------+           |
-|                   |   | +--------------+ | +-->| Google   | 11 biz    |
-| +---------------+ |   | | Job          | |   | | Maps     |           |
-| | Base          |------>| Agent        | |   | +----------+           |
-| | Browser       | |   | +--------------+ |   | +----------+           |
-| |               | |   | +--------------+ |   | |MonkeyType| 412 WPM  |
-| | Playwright    | |   | | Demo         |------>|          | 100% acc  |
-| | + Cookies     | |   | | Agent        | |   | +----------+           |
-| +---------------+ |   | +--------------+ |   | +----------+           |
-|                   |   | +--------------+ |   | |Any       |           |
-|                   |   | | Stats        | |   | |Website   |           |
-|                   |   | | Tracker      | |   | +----------+           |
-+-------------------+   +--------+-------+   +-------------------------+
-                                  |
-                        +- - - - -v- - - - -+
-                        | CLI:               |
-                        | linkedin_engage.py |
-                        +- - - - - - - - - -+
-
-             15 scripts | 3000+ lines | Built with Claude Code
-```
-
-<details>
-<summary>Interactive diagram (click to expand)</summary>
-
 ```mermaid
 graph LR
     subgraph Anti-Detect["ANTI-DETECT"]
@@ -167,8 +131,6 @@ graph LR
     style Platforms fill:#1a4d2e,stroke:#22c55e,color:#e5e5e5
     style CLI fill:transparent,stroke:#06b6d4,color:#06b6d4,stroke-dasharray: 5 5
 ```
-
-</details>
 
 ---
 
