@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+stats/history.json
+stats/current-state.md
+stats/*.png
+demo_screenshots/
+*.log
+.DS_Store
