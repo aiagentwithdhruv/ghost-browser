@@ -75,6 +75,38 @@ Watch the browser come alive — 6 stages, zero human input:
 
 <br />
 
+### MonkeyType — Live Demo | 333 WPM | 100% Accuracy
+
+<div align="center">
+
+![MonkeyType Live Demo 333 WPM](assets/monkeytype-329wpm-live.png)
+
+</div>
+
+> **Live run (March 2026):** 333 WPM, 416 characters typed in 15 seconds, 100% accuracy, 83% consistency. Every single character typed by the bot in real-time — no human touched the keyboard.
+
+<br />
+
+### LinkedIn — Live Feed Scrape
+
+```
+[1] Henryk Brzozowski — Voice AI Expert
+    "Most people in the Voice AI space start with cold outreach..."
+
+[2] Raj Shamani — Founder & Host @ Figuring Out
+    "Suniel Shetty almost left his acting career to sell idlis..."
+
+[3] Aditya Sharma — Helping Top 1% AI Talent
+    "Most people confuse these 4 AI terms..."
+
+[4] Fatmir Hyseni — Chartered Marketer
+    "SEO built Canva. LLMs are now sending them double-digit % of traffic..."
+```
+
+> **Live run (March 2026):** Bot opened LinkedIn, scrolled the feed with human-like behavior, and extracted 5 real posts — authors, headlines, content — all hands-free.
+
+<br />
+
 ### LinkedIn — Auto-Posted With Image
 
 <div align="center">
