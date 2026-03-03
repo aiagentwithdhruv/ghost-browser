@@ -271,13 +271,16 @@ def cmd_comments(args):
 
 
 def cmd_engage(args):
-    """Batch engagement — like + comment on N posts."""
+    """Batch engagement — like + comment on N posts with human-like pacing."""
+    import random as _rand
+
     browser = LinkedInBrowser(headless=not args.visible)
     browser.start()
 
     try:
-        posts = browser.get_feed_posts(count=args.count * 2)  # Get extra for filtering
+        posts = browser.get_feed_posts(count=args.count * 3)  # Get extra for filtering
         engaged = 0
+        skipped = 0
 
         for post in posts:
             if engaged >= args.count:
@@ -286,35 +289,74 @@ def cmd_engage(args):
             if post["is_liked"]:
                 continue
 
+            # ── Human behavior: don't engage with every single post ──
+            # Skip ~20% of posts randomly (humans scroll past some)
+            if _rand.random() < 0.2 and engaged > 0:
+                skipped += 1
+                print(f"  [scrolled past: {post['author'][:30]}]", file=sys.stderr)
+                HumanBehavior.random_delay(1.0, 2.5)  # Quick scroll past
+                continue
+
             print(f"\n{'='*60}")
             print(f"[{engaged+1}/{args.count}] {post['author']}")
             print(f"    {post['content'][:200]}...")
+
+            # ── Human behavior: "read" the post before engaging ──
+            word_count = len(post.get("content", "").split())
+            read_time = max(2.0, min(8.0, word_count / 200 * 60))  # ~200 WPM reading
+            read_time *= _rand.uniform(0.7, 1.4)  # Natural variance
+            print(f"  [reading {read_time:.1f}s...]", file=sys.stderr)
+            import time as _time
+            _time.sleep(read_time)
 
             # Like
             browser.like_post(post_index=post["index"])
             log_action("like", {"author": post["author"]})
 
-            # Comment (if AI available)
+            # ── Human behavior: pause after liking (like absorbing the action) ──
+            HumanBehavior.random_delay(1.0, 3.0)
+
+            # Comment (if AI available and not like-only)
             if not args.like_only:
-                comment = generate_ai_comment(post["content"], post["author"])
-                if comment:
-                    print(f"  AI comment: {comment}")
-                    confirm = prompt_user("  Post? (y/n/e)dit", "y")
-                    if confirm == "e":
-                        comment = input("  Your comment: ").strip()
-                        confirm = "y"
-                    if confirm == "y" and post.get("post_url"):
-                        browser.comment_on_post(post["post_url"], comment)
-                        log_action("comment", {
-                            "author": post["author"],
-                            "comment": comment,
-                        })
-                        browser.goto("https://www.linkedin.com/feed/", settle=3)
+                # Humans don't comment on every post they like — ~60% comment rate
+                should_comment = _rand.random() < 0.6
+                if should_comment:
+                    comment = generate_ai_comment(post["content"], post["author"])
+                    if comment:
+                        print(f"  AI comment: {comment}")
+                        confirm = prompt_user("  Post? (y/n/e)dit", "y")
+                        if confirm == "e":
+                            comment = input("  Your comment: ").strip()
+                            confirm = "y"
+                        if confirm == "y" and post.get("post_url"):
+                            browser.comment_on_post(post["post_url"], comment)
+                            log_action("comment", {
+                                "author": post["author"],
+                                "comment": comment,
+                            })
+                            # Navigate back to feed with a natural delay
+                            HumanBehavior.random_delay(2.0, 4.0)
+                            browser.goto("https://www.linkedin.com/feed/", settle=3)
+                else:
+                    print(f"  [liked only — moving on]", file=sys.stderr)
 
             engaged += 1
-            HumanBehavior.between_posts_delay()
 
-        print(f"\nEngaged with {engaged} posts")
+            # ── Human behavior: variable delay between posts ──
+            # Longer pauses feel natural — 5-15 seconds between engagements
+            between_delay = _rand.uniform(5.0, 15.0)
+            print(f"  [waiting {between_delay:.0f}s before next...]", file=sys.stderr)
+            _time.sleep(between_delay)
+
+            # ── Human behavior: occasional idle scroll (just browsing, not engaging) ──
+            if _rand.random() < 0.3:
+                idle_scrolls = _rand.randint(1, 3)
+                print(f"  [idle scrolling {idle_scrolls}x...]", file=sys.stderr)
+                for _ in range(idle_scrolls):
+                    HumanBehavior.human_scroll(browser.page, "down", _rand.randint(200, 500))
+                    HumanBehavior.random_delay(1.5, 4.0)
+
+        print(f"\nEngaged with {engaged} posts (skipped {skipped})")
 
     finally:
         browser.stop()

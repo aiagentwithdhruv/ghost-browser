@@ -225,12 +225,19 @@ class LinkedInBrowser(BaseBrowser):
         self.goto(f"{self.BASE_URL}/feed/", settle=3)
         self._check_auth()
 
+        # Human warmup — settle into the page before scrolling
+        HumanBehavior.warmup_delay()
+        HumanBehavior.mouse_drift(self.page, steps=2)
+
         posts = []
         scroll_rounds = max(3, count // 3)
 
-        for _ in range(scroll_rounds):
+        for i in range(scroll_rounds):
             HumanBehavior.human_scroll(self.page, "down", random.randint(400, 800))
-            HumanBehavior.random_delay(1.5, 3.0)
+            HumanBehavior.random_delay(2.0, 5.0)
+            # Occasional mouse drift while reading feed
+            if random.random() < 0.4:
+                HumanBehavior.mouse_drift(self.page, steps=1)
 
         # Extract posts from DOM
         raw_posts = self.evaluate("""
@@ -426,28 +433,102 @@ class LinkedInBrowser(BaseBrowser):
     def like_post(self, post_index=None, post_urn=None):
         """
         Like a post in the current feed by index or URN.
-        Uses human-like click behavior.
+        Uses JavaScript to find the correct post element, then scrolls to it
+        and clicks the like button with human-like behavior.
         """
-        selector = None
-        if post_urn:
-            selector = f'[data-urn="{post_urn}"] button[aria-label*="Like"]'
-        elif post_index is not None:
-            # Like the Nth post on the page
-            selector = (
-                f'.feed-shared-update-v2:nth-of-type({post_index + 1}) '
-                f'button[aria-label*="Like"], '
-                f'[data-urn]:nth-of-type({post_index + 1}) '
-                f'button[aria-label*="Like"]'
-            )
-
-        if not selector:
-            raise ValueError("Provide post_index or post_urn")
-
         try:
-            HumanBehavior.human_click(self.page, selector)
+            # First scroll the post into view so a human would "see" it
+            scrolled = self.evaluate("""
+                (args) => {
+                    const posts = document.querySelectorAll(
+                        '.feed-shared-update-v2, [data-urn*="urn:li:activity"]'
+                    );
+                    let target = null;
+                    if (args.urn) {
+                        target = document.querySelector('[data-urn="' + args.urn + '"]');
+                    } else if (args.index !== null && args.index < posts.length) {
+                        target = posts[args.index];
+                    }
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        return true;
+                    }
+                    return false;
+                }
+            """, {"urn": post_urn or "", "index": post_index})
+
+            if not scrolled:
+                print(f"  Post not found in DOM", file=sys.stderr)
+                return False
+
+            # Human pause — "reading" the post before liking
+            HumanBehavior.random_delay(1.5, 3.5)
+
+            # Find and click the like button via JavaScript (reliable across DOM changes)
+            liked = self.evaluate("""
+                (args) => {
+                    const posts = document.querySelectorAll(
+                        '.feed-shared-update-v2, [data-urn*="urn:li:activity"]'
+                    );
+                    let target = null;
+                    if (args.urn) {
+                        target = document.querySelector('[data-urn="' + args.urn + '"]');
+                    } else if (args.index !== null && args.index < posts.length) {
+                        target = posts[args.index];
+                    }
+                    if (!target) return { found: false, reason: 'post_not_found' };
+
+                    // Find the like button — LinkedIn uses several variations
+                    const likeBtn = target.querySelector(
+                        'button[aria-label*="Like"]:not([aria-pressed="true"]), ' +
+                        'button[aria-label*="like"]:not([aria-pressed="true"]), ' +
+                        'button.reactions-react-button:not([aria-pressed="true"]), ' +
+                        'button[data-reaction-type] span:first-child'
+                    );
+
+                    if (!likeBtn) {
+                        // Check if already liked
+                        const alreadyLiked = target.querySelector(
+                            'button[aria-pressed="true"][aria-label*="ike"]'
+                        );
+                        if (alreadyLiked) return { found: true, reason: 'already_liked' };
+                        return { found: false, reason: 'button_not_found' };
+                    }
+
+                    // Get button position for human-like click offset
+                    const rect = likeBtn.getBoundingClientRect();
+                    return {
+                        found: true,
+                        reason: 'ready',
+                        x: rect.x + rect.width / 2,
+                        y: rect.y + rect.height / 2,
+                        width: rect.width,
+                        height: rect.height
+                    };
+                }
+            """, {"urn": post_urn or "", "index": post_index})
+
+            if not liked.get("found"):
+                print(f"  Like button not found: {liked.get('reason')}", file=sys.stderr)
+                return False
+
+            if liked.get("reason") == "already_liked":
+                print(f"  Already liked", file=sys.stderr)
+                return True
+
+            # Click at the button position with human offset
+            x = liked["x"] + random.uniform(-liked["width"] * 0.1, liked["width"] * 0.1)
+            y = liked["y"] + random.uniform(-liked["height"] * 0.1, liked["height"] * 0.1)
+
+            # Small hover delay — human moving mouse to button
+            HumanBehavior.random_delay(0.2, 0.6)
+            self.page.mouse.click(x, y)
+
+            HumanBehavior.random_delay(0.5, 1.5)
             self.human.tick()
             print(f"  Liked post", file=sys.stderr)
             return True
+
         except Exception as e:
             print(f"  Failed to like: {e}", file=sys.stderr)
             return False

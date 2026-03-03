@@ -57,7 +57,22 @@ class HumanBehavior:
 
     @staticmethod
     def between_posts_delay():
-        """Delay between processing different posts (3-8 seconds)."""
+        """Delay between processing different posts (5-15 seconds).
+        Longer range than before — humans don't rapid-fire through posts."""
+        time.sleep(random.uniform(5.0, 15.0))
+
+    @staticmethod
+    def idle_pause():
+        """Random idle pause — simulates human getting distracted or re-reading (8-25 seconds).
+        Call occasionally between actions to break up patterns."""
+        duration = random.uniform(8.0, 25.0)
+        time.sleep(duration)
+        return duration
+
+    @staticmethod
+    def warmup_delay():
+        """Initial session warmup — humans don't start clicking instantly after page load.
+        Simulates reading the page, checking notifications, settling in (3-8 seconds)."""
         time.sleep(random.uniform(3.0, 8.0))
 
     # ── Typing ──────────────────────────────────────────────
@@ -236,6 +251,63 @@ class HumanBehavior:
     def random_viewport(cls):
         """Return a random realistic viewport size."""
         return random.choice(cls.VIEWPORTS)
+
+    # ── Mouse Behavior ─────────────────────────────────────
+
+    @staticmethod
+    def mouse_drift(page, steps=None):
+        """
+        Subtle mouse movement while 'reading' — humans never hold the cursor perfectly still.
+        Moves mouse in small random arcs across the viewport.
+        """
+        steps = steps or random.randint(2, 5)
+        try:
+            viewport = page.viewport_size or {"width": 1440, "height": 900}
+            # Start from a random comfortable position (middle-ish area)
+            x = random.randint(int(viewport["width"] * 0.2), int(viewport["width"] * 0.8))
+            y = random.randint(int(viewport["height"] * 0.2), int(viewport["height"] * 0.7))
+
+            for _ in range(steps):
+                # Small drift — 30-120px in random direction
+                dx = random.randint(-120, 120)
+                dy = random.randint(-80, 80)
+                new_x = max(10, min(viewport["width"] - 10, x + dx))
+                new_y = max(10, min(viewport["height"] - 10, y + dy))
+
+                page.mouse.move(new_x, new_y)
+                x, y = new_x, new_y
+                time.sleep(random.uniform(0.3, 1.2))
+        except Exception:
+            pass  # Mouse drift is cosmetic — never fail on it
+
+    @staticmethod
+    def hover_before_click(page, selector, timeout=5000):
+        """
+        Move mouse to element, pause (noticing it), then click.
+        More natural than teleporting the cursor to the click target.
+        """
+        try:
+            locator = page.locator(selector).first
+            locator.wait_for(state="visible", timeout=timeout)
+            box = locator.bounding_box()
+            if box:
+                # Move to element with slight overshoot
+                target_x = box["x"] + box["width"] / 2 + random.uniform(-5, 5)
+                target_y = box["y"] + box["height"] / 2 + random.uniform(-3, 3)
+                page.mouse.move(target_x, target_y)
+                time.sleep(random.uniform(0.15, 0.5))  # Hover pause
+
+                # Click with offset
+                offset_x = random.uniform(-box["width"] * 0.1, box["width"] * 0.1)
+                offset_y = random.uniform(-box["height"] * 0.1, box["height"] * 0.1)
+                locator.click(position={"x": box["width"] / 2 + offset_x,
+                                         "y": box["height"] / 2 + offset_y})
+            else:
+                locator.click()
+            HumanBehavior.micro_delay()
+        except Exception:
+            # Fallback to regular click
+            HumanBehavior.human_click(page, selector, timeout)
 
     # ── Convenience ─────────────────────────────────────────
 
