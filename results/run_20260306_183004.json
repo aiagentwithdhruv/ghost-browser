@@ -1,0 +1,142 @@
+{
+  "timestamp": "2026-03-06T18:30:04.648251",
+  "agents": [
+    "monkeytype",
+    "github",
+    "hackernews"
+  ],
+  "elapsed_seconds": 73.15035581588745,
+  "results": {
+    "monkeytype": {
+      "result": {
+        "wpm": 359,
+        "elapsed": 12.668705940246582,
+        "screenshot": "/tmp/ghost-browser/monkeytype_182922.png"
+      }
+    },
+    "github": {
+      "result": {
+        "repos": [
+          {
+            "name": "moeru-ai/airi",
+            "description": "\ud83d\udc96\ud83e\uddf8 Self hosted, you-owned Grok Companion, a container of souls of waifu, cyber livings to bring them into our worlds, wishing to achieve Neuro-sama's altitude. Capable of realtime voice chat, Minecraft, Factorio playing. Web / macOS / Windows supported.",
+            "stars": "28,895",
+            "url": "https://github.com/moeru-ai/airi"
+          },
+          {
+            "name": "QwenLM/Qwen-Agent",
+            "description": "Agent framework and applications built upon Qwen>=3.0, featuring Function Calling, MCP, Code Interpreter, RAG, Chrome extension, etc.",
+            "stars": "14,322",
+            "url": "https://github.com/QwenLM/Qwen-Agent"
+          },
+          {
+            "name": "microsoft/hve-core",
+            "description": "A refined collection of Hypervelocity Engineering components (instructions, prompts, agents) to start your project off right, or upgrade your existing projects to get the most out of all Copilots",
+            "stars": "446",
+            "url": "https://github.com/microsoft/hve-core"
+          },
+          {
+            "name": "Ed1s0nZ/CyberStrikeAI",
+            "description": "CyberStrikeAI is an AI-native security testing platform built in Go. It integrates 100+ security tools, an intelligent orchestration engine, role-based testing with predefined security roles, a skills system with specialized testing skills, and comprehensive lifecycle management capabilities.",
+            "stars": "1,414",
+            "url": "https://github.com/Ed1s0nZ/CyberStrikeAI"
+          },
+          {
+            "name": "inclusionAI/AReaL",
+            "description": "Lightning-Fast RL for LLM Reasoning and Agents. Made Simple & Flexible.",
+            "stars": "4,280",
+            "url": "https://github.com/inclusionAI/AReaL"
+          },
+          {
+            "name": "lingfengQAQ/webnovel-writer",
+            "description": "\u57fa\u4e8e Claude Code \u7684\u957f\u7bc7\u7f51\u6587\u8f85\u52a9\u521b\u4f5c\u7cfb\u7edf\uff0c\u89e3\u51b3 AI \u5199\u4f5c\u4e2d\u7684\u300c\u9057\u5fd8\u300d\u548c\u300c\u5e7b\u89c9\u300d\u95ee\u9898\uff0c\u652f\u6301 200 \u4e07\u5b57\u91cf\u7ea7 \u8fde\u8f7d\u521b\u4f5c\u3002",
+            "stars": "663",
+            "url": "https://github.com/lingfengQAQ/webnovel-writer"
+          },
+          {
+            "name": "openai/skills",
+            "description": "Skills Catalog for Codex",
+            "stars": "11,480",
+            "url": "https://github.com/openai/skills"
+          },
+          {
+            "name": "TheCraigHewitt/seomachine",
+            "description": "A specialized Claude Code workspace for creating long-form, SEO-optimized blog content for any business. This system helps you research, write, analyze, and optimize content that ranks well and serves your target audience.",
+            "stars": "1,967",
+            "url": "https://github.com/TheCraigHewitt/seomachine"
+          },
+          {
+            "name": "virattt/ai-hedge-fund",
+            "description": "An AI Hedge Fund Team",
+            "stars": "46,219",
+            "url": "https://github.com/virattt/ai-hedge-fund"
+          },
+          {
+            "name": "aidenybai/react-grab",
+            "description": "Select context for coding agents directly from your website",
+            "stars": "5,775",
+            "url": "https://github.com/aidenybai/react-grab"
+          }
+        ],
+        "count": 10
+      }
+    },
+    "hackernews": {
+      "result": {
+        "stories": [
+          {
+            "title": "LibreSprite \u2013 open-source pixel art editor",
+            "url": "https://libresprite.github.io/",
+            "points": "73 points"
+          },
+          {
+            "title": "System76 on Age Verification Laws",
+            "url": "https://blog.system76.com/post/system76-on-age-verification/",
+            "points": "503 points"
+          },
+          {
+            "title": "GPL upgrades via section 14 proxy delegation",
+            "url": "https://runxiyu.org/comp/gplproxy/",
+            "points": "68 points"
+          },
+          {
+            "title": "GPT-5.4",
+            "url": "https://openai.com/index/introducing-gpt-5-4/",
+            "points": "882 points"
+          },
+          {
+            "title": "Async Programming Is Just Inject Time",
+            "url": "https://willhbr.net/2026/03/02/async-inject-and-effects/",
+            "points": "5 points"
+          },
+          {
+            "title": "Hardening Firefox with Anthropic's Red Team",
+            "url": "https://blog.mozilla.org/en/firefox/hardening-firefox-anthropic-red-team/",
+            "points": "45 points"
+          },
+          {
+            "title": "10% of Firefox crashes are caused by bitflips",
+            "url": "https://mas.to/@gabrielesvelto/116171750653898304",
+            "points": "715 points"
+          },
+          {
+            "title": "Show HN: Swarm \u2013 Program a colony of 200 ants using a custom assembly language",
+            "url": "https://dev.moment.com/",
+            "points": "111 points"
+          },
+          {
+            "title": "Ask HN: How many of you hold an amateur radio license in your country?",
+            "url": "https://news.ycombinator.com/item?id=47232091",
+            "points": "39 points"
+          },
+          {
+            "title": "A GitHub Issue Title Compromised 4k Developer Machines",
+            "url": "https://grith.ai/blog/clinejection-when-your-ai-tool-installs-another",
+            "points": "493 points"
+          }
+        ],
+        "count": 10
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-03-06T18:25:18.656110",
+  "agents": [
+    "monkeytype",
+    "github",
+    "hackernews"
+  ],
+  "elapsed_seconds": 0.04181504249572754,
+  "results": {
+    "monkeytype": {
+      "error": "Cannot switch to a different thread\n\tCurrent:  <greenlet.greenlet object at 0x1081f4640 (otid=0x1081f0120) current active started main>\n\tExpected: <greenlet.greenlet object at 0x107e98540 (otid=0x107d1b030) suspended active started main>"
+    },
+    "hackernews": {
+      "error": "Cannot switch to a different thread\n\tCurrent:  <greenlet.greenlet object at 0x1081f4d00 (otid=0x1081f0a80) current active started main>\n\tExpected: <greenlet.greenlet object at 0x107e98540 (otid=0x107d1b030) suspended active started main>"
+    },
+    "github": {
+      "error": "Cannot switch to a different thread\n\tCurrent:  <greenlet.greenlet object at 0x1081f48c0 (otid=0x1081f08a0) current active started main>\n\tExpected: <greenlet.greenlet object at 0x107e98540 (otid=0x107d1b030) suspended active started main>"
+    }
+  }
+}
