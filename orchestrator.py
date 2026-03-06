@@ -342,20 +342,45 @@ def agent_github_trending(session: BrowserSession):
     return {"repos": repos, "count": len(repos)}
 
 
-def agent_twitter_trending(session: BrowserSession):
-    """Scrape Twitter/X trending topics and top posts."""
-    session.goto("https://x.com/explore/tabs/trending", settle=4)
+def agent_twitter_trending(session: BrowserSession, query="AI agents"):
+    """Scrape Twitter/X trending topics and top posts.
+
+    Requires TWITTER_AUTH_TOKEN + TWITTER_CT0 cookies in .env.
+    Get them: x.com → DevTools → Application → Cookies → copy auth_token & ct0.
+    """
+    auth_token = os.getenv("TWITTER_AUTH_TOKEN")
+    ct0 = os.getenv("TWITTER_CT0")
+
+    if not auth_token or not ct0:
+        session._log("No Twitter cookies set — set TWITTER_AUTH_TOKEN + TWITTER_CT0 in .env")
+        return {
+            "error": "Twitter requires auth cookies. Add TWITTER_AUTH_TOKEN and TWITTER_CT0 to .env",
+            "setup": "x.com → DevTools (F12) → Application → Cookies → copy auth_token & ct0",
+            "trends": [], "tweets": [], "trend_count": 0, "tweet_count": 0,
+        }
+
+    # Inject cookies
+    session.context.add_cookies([
+        {"name": "auth_token", "value": auth_token, "domain": ".x.com", "path": "/"},
+        {"name": "ct0", "value": ct0, "domain": ".x.com", "path": "/"},
+    ])
+
+    # Go to trending or search
+    if query:
+        session.goto(f"https://x.com/search?q={query.replace(' ', '+')}&src=typed_query&f=top", settle=4)
+    else:
+        session.goto("https://x.com/explore/tabs/trending", settle=4)
+
     HumanBehavior.warmup_delay()
 
-    # Scroll to load more trends
     for _ in range(3):
         session.scroll("down", random.randint(300, 600))
         HumanBehavior.random_delay(1.5, 3.0)
 
+    # Extract trending topics
     trends = session.evaluate("""
         () => {
             const results = [];
-            // Trending topics from explore page
             const cells = document.querySelectorAll(
                 '[data-testid="trend"], [data-testid="cellInnerDiv"]'
             );
@@ -366,7 +391,6 @@ def agent_twitter_trending(session: BrowserSession):
                     .map(s => s.textContent.trim())
                     .filter(t => t && t.length > 2 && !t.startsWith('·'));
                 if (texts.length >= 1) {
-                    // Find the trend name (usually the boldest/largest text)
                     const trendName = texts.find(t =>
                         t.startsWith('#') || (t.length > 3 && !t.match(/^\\d+/))
                     ) || texts[0];
@@ -377,12 +401,7 @@ def agent_twitter_trending(session: BrowserSession):
                         t.match(/trending|politics|sports|tech|entertainment|business/i)
                     ) || '';
                     if (trendName && !results.some(r => r.topic === trendName)) {
-                        results.push({
-                            topic: trendName,
-                            posts: postCount,
-                            category: category,
-                            index: results.length,
-                        });
+                        results.push({ topic: trendName, posts: postCount, category });
                     }
                 }
             }
@@ -390,7 +409,7 @@ def agent_twitter_trending(session: BrowserSession):
         }
     """)
 
-    # Also try to grab any visible tweets
+    # Extract tweets
     tweets = session.evaluate("""
         () => {
             const results = [];
@@ -399,22 +418,12 @@ def agent_twitter_trending(session: BrowserSession):
             );
             for (let i = 0; i < Math.min(tweetEls.length, 10); i++) {
                 const tweet = tweetEls[i];
-                const userEl = tweet.querySelector(
-                    '[data-testid="User-Name"] a, a[role="link"][href*="/"]'
-                );
-                const textEl = tweet.querySelector(
-                    '[data-testid="tweetText"], [lang]'
-                );
-                const metricsEls = tweet.querySelectorAll(
-                    '[data-testid="reply"], [data-testid="retweet"], [data-testid="like"]'
-                );
-                const metrics = Array.from(metricsEls)
-                    .map(m => m.getAttribute('aria-label') || m.textContent.trim());
+                const userEl = tweet.querySelector('[data-testid="User-Name"]');
+                const textEl = tweet.querySelector('[data-testid="tweetText"]');
                 if (textEl) {
                     results.push({
-                        user: userEl ? userEl.textContent.trim() : '',
+                        user: userEl ? userEl.textContent.trim().split('·')[0].trim() : '',
                         text: textEl.textContent.trim().substring(0, 280),
-                        metrics: metrics.slice(0, 3),
                     });
                 }
             }
@@ -425,7 +434,7 @@ def agent_twitter_trending(session: BrowserSession):
     session._log(f"Found {len(trends)} trends, {len(tweets)} tweets")
     session.screenshot()
     return {"trends": trends[:15], "tweets": tweets[:10],
-            "trend_count": len(trends), "tweet_count": len(tweets)}
+            "query": query, "trend_count": len(trends), "tweet_count": len(tweets)}
 
 
 def agent_hacker_news(session: BrowserSession):

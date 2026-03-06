@@ -241,81 +241,23 @@ def scrape_gmaps(query: str = "AI companies") -> str:
 
 
 @mcp.tool()
-def scrape_twitter(topic: str = "") -> str:
+def scrape_twitter(topic: str = "AI agents") -> str:
     """
-    Scrape Twitter/X trending topics and tweets. No login required.
-    Optionally search for a specific topic.
+    Scrape Twitter/X trending topics and tweets.
+    Uses cookie auth if TWITTER_AUTH_TOKEN is set, otherwise falls back to Nitter.
 
     Args:
-        topic: Optional topic to search for (default: trending page)
+        topic: Topic to search for (default "AI agents")
     """
+    from orchestrator import agent_twitter_trending
     from multi_context import MultiContextManager
-    from human_behavior import HumanBehavior
-    import random
 
     manager = MultiContextManager(headless=True)
     manager.start()
     try:
         session = manager.create_scraper_session("twitter")
-
-        if topic:
-            url = f"https://x.com/search?q={topic.replace(' ', '%20')}&src=typed_query&f=top"
-        else:
-            url = "https://x.com/explore/tabs/trending"
-
-        session.goto(url, settle=4)
-        HumanBehavior.warmup_delay()
-
-        for _ in range(3):
-            session.scroll("down", random.randint(300, 600))
-            HumanBehavior.random_delay(1.5, 3.0)
-
-        # Get trends or search results
-        data = session.evaluate("""
-            () => {
-                const trends = [];
-                const cells = document.querySelectorAll(
-                    '[data-testid="trend"], [data-testid="cellInnerDiv"]'
-                );
-                for (let i = 0; i < Math.min(cells.length, 15); i++) {
-                    const cell = cells[i];
-                    const spans = cell.querySelectorAll('span');
-                    const texts = Array.from(spans)
-                        .map(s => s.textContent.trim())
-                        .filter(t => t && t.length > 2);
-                    if (texts.length >= 1) {
-                        const topic = texts.find(t => t.startsWith('#') || t.length > 3) || texts[0];
-                        if (topic && !trends.some(r => r.topic === topic)) {
-                            trends.push({ topic, context: texts.slice(0, 3).join(' | ') });
-                        }
-                    }
-                }
-
-                const tweets = [];
-                const tweetEls = document.querySelectorAll(
-                    '[data-testid="tweet"], article[role="article"]'
-                );
-                for (let i = 0; i < Math.min(tweetEls.length, 10); i++) {
-                    const tweet = tweetEls[i];
-                    const textEl = tweet.querySelector('[data-testid="tweetText"]');
-                    const userEl = tweet.querySelector('[data-testid="User-Name"]');
-                    if (textEl) {
-                        tweets.push({
-                            user: userEl ? userEl.textContent.trim().split('·')[0] : '',
-                            text: textEl.textContent.trim().substring(0, 280),
-                        });
-                    }
-                }
-
-                return { trends, tweets };
-            }
-        """)
-
-        return json.dumps({
-            "topic": topic or "trending",
-            "trends": data.get("trends", []),
-            "tweets": data.get("tweets", []),
-        }, indent=2)
+        result = agent_twitter_trending(session, query=topic)
+        return json.dumps(result, indent=2)
     finally:
         manager.stop()
 
