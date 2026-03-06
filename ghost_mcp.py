@@ -25,6 +25,7 @@ Tools exposed:
     - scrape_url: Scrape any website
     - scrape_indeed: Scrape Indeed jobs
     - scrape_gmaps: Scrape Google Maps businesses
+    - scrape_twitter: Scrape Twitter/X trends and tweets
     - typing_demo: Run MonkeyType speed test
     - screenshot: Take screenshot of any URL
     - multi_run: Run multiple agents in parallel
@@ -235,6 +236,86 @@ def scrape_gmaps(query: str = "AI companies") -> str:
         session = manager.create_scraper_session("gmaps")
         result = agent_scrape_gmaps(session, query)
         return json.dumps(result)
+    finally:
+        manager.stop()
+
+
+@mcp.tool()
+def scrape_twitter(topic: str = "") -> str:
+    """
+    Scrape Twitter/X trending topics and tweets. No login required.
+    Optionally search for a specific topic.
+
+    Args:
+        topic: Optional topic to search for (default: trending page)
+    """
+    from multi_context import MultiContextManager
+    from human_behavior import HumanBehavior
+    import random
+
+    manager = MultiContextManager(headless=True)
+    manager.start()
+    try:
+        session = manager.create_scraper_session("twitter")
+
+        if topic:
+            url = f"https://x.com/search?q={topic.replace(' ', '%20')}&src=typed_query&f=top"
+        else:
+            url = "https://x.com/explore/tabs/trending"
+
+        session.goto(url, settle=4)
+        HumanBehavior.warmup_delay()
+
+        for _ in range(3):
+            session.scroll("down", random.randint(300, 600))
+            HumanBehavior.random_delay(1.5, 3.0)
+
+        # Get trends or search results
+        data = session.evaluate("""
+            () => {
+                const trends = [];
+                const cells = document.querySelectorAll(
+                    '[data-testid="trend"], [data-testid="cellInnerDiv"]'
+                );
+                for (let i = 0; i < Math.min(cells.length, 15); i++) {
+                    const cell = cells[i];
+                    const spans = cell.querySelectorAll('span');
+                    const texts = Array.from(spans)
+                        .map(s => s.textContent.trim())
+                        .filter(t => t && t.length > 2);
+                    if (texts.length >= 1) {
+                        const topic = texts.find(t => t.startsWith('#') || t.length > 3) || texts[0];
+                        if (topic && !trends.some(r => r.topic === topic)) {
+                            trends.push({ topic, context: texts.slice(0, 3).join(' | ') });
+                        }
+                    }
+                }
+
+                const tweets = [];
+                const tweetEls = document.querySelectorAll(
+                    '[data-testid="tweet"], article[role="article"]'
+                );
+                for (let i = 0; i < Math.min(tweetEls.length, 10); i++) {
+                    const tweet = tweetEls[i];
+                    const textEl = tweet.querySelector('[data-testid="tweetText"]');
+                    const userEl = tweet.querySelector('[data-testid="User-Name"]');
+                    if (textEl) {
+                        tweets.push({
+                            user: userEl ? userEl.textContent.trim().split('·')[0] : '',
+                            text: textEl.textContent.trim().substring(0, 280),
+                        });
+                    }
+                }
+
+                return { trends, tweets };
+            }
+        """)
+
+        return json.dumps({
+            "topic": topic or "trending",
+            "trends": data.get("trends", []),
+            "tweets": data.get("tweets", []),
+        }, indent=2)
     finally:
         manager.stop()
 

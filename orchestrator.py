@@ -342,6 +342,92 @@ def agent_github_trending(session: BrowserSession):
     return {"repos": repos, "count": len(repos)}
 
 
+def agent_twitter_trending(session: BrowserSession):
+    """Scrape Twitter/X trending topics and top posts."""
+    session.goto("https://x.com/explore/tabs/trending", settle=4)
+    HumanBehavior.warmup_delay()
+
+    # Scroll to load more trends
+    for _ in range(3):
+        session.scroll("down", random.randint(300, 600))
+        HumanBehavior.random_delay(1.5, 3.0)
+
+    trends = session.evaluate("""
+        () => {
+            const results = [];
+            // Trending topics from explore page
+            const cells = document.querySelectorAll(
+                '[data-testid="trend"], [data-testid="cellInnerDiv"]'
+            );
+            for (let i = 0; i < Math.min(cells.length, 20); i++) {
+                const cell = cells[i];
+                const spans = cell.querySelectorAll('span');
+                const texts = Array.from(spans)
+                    .map(s => s.textContent.trim())
+                    .filter(t => t && t.length > 2 && !t.startsWith('·'));
+                if (texts.length >= 1) {
+                    // Find the trend name (usually the boldest/largest text)
+                    const trendName = texts.find(t =>
+                        t.startsWith('#') || (t.length > 3 && !t.match(/^\\d+/))
+                    ) || texts[0];
+                    const postCount = texts.find(t =>
+                        t.match(/posts|tweets|K |M /i)
+                    ) || '';
+                    const category = texts.find(t =>
+                        t.match(/trending|politics|sports|tech|entertainment|business/i)
+                    ) || '';
+                    if (trendName && !results.some(r => r.topic === trendName)) {
+                        results.push({
+                            topic: trendName,
+                            posts: postCount,
+                            category: category,
+                            index: results.length,
+                        });
+                    }
+                }
+            }
+            return results;
+        }
+    """)
+
+    # Also try to grab any visible tweets
+    tweets = session.evaluate("""
+        () => {
+            const results = [];
+            const tweetEls = document.querySelectorAll(
+                '[data-testid="tweet"], article[role="article"]'
+            );
+            for (let i = 0; i < Math.min(tweetEls.length, 10); i++) {
+                const tweet = tweetEls[i];
+                const userEl = tweet.querySelector(
+                    '[data-testid="User-Name"] a, a[role="link"][href*="/"]'
+                );
+                const textEl = tweet.querySelector(
+                    '[data-testid="tweetText"], [lang]'
+                );
+                const metricsEls = tweet.querySelectorAll(
+                    '[data-testid="reply"], [data-testid="retweet"], [data-testid="like"]'
+                );
+                const metrics = Array.from(metricsEls)
+                    .map(m => m.getAttribute('aria-label') || m.textContent.trim());
+                if (textEl) {
+                    results.push({
+                        user: userEl ? userEl.textContent.trim() : '',
+                        text: textEl.textContent.trim().substring(0, 280),
+                        metrics: metrics.slice(0, 3),
+                    });
+                }
+            }
+            return results;
+        }
+    """)
+
+    session._log(f"Found {len(trends)} trends, {len(tweets)} tweets")
+    session.screenshot()
+    return {"trends": trends[:15], "tweets": tweets[:10],
+            "trend_count": len(trends), "tweet_count": len(tweets)}
+
+
 def agent_hacker_news(session: BrowserSession):
     """Read top Hacker News stories."""
     session.goto("https://news.ycombinator.com", settle=2)
@@ -421,14 +507,21 @@ AGENTS = {
         "task": agent_hacker_news,
         "session_name": "hackernews",
     },
+    "twitter": {
+        "description": "Scrape Twitter/X trending topics & tweets",
+        "setup": lambda m: m.create_scraper_session("twitter"),
+        "task": agent_twitter_trending,
+        "session_name": "twitter",
+    },
 }
 
 # Pre-built combos
 COMBOS = {
     "demo": ["monkeytype", "github", "hackernews"],
-    "research": ["linkedin-feed", "indeed", "github"],
+    "research": ["linkedin-feed", "indeed", "github", "twitter"],
     "lead-gen": ["linkedin-feed", "gmaps", "indeed"],
-    "full": ["linkedin-engage", "indeed", "gmaps", "github", "hackernews"],
+    "social": ["linkedin-feed", "twitter", "hackernews"],
+    "full": ["linkedin-engage", "indeed", "gmaps", "github", "hackernews", "twitter"],
 }
 
 
@@ -508,6 +601,8 @@ def run_orchestrator(agent_names, headless=False, save_results=True):
                     print(f"  [{name}] {r['count']} stories", file=sys.stderr)
                 elif "liked" in r:
                     print(f"  [{name}] {r['liked']} posts liked", file=sys.stderr)
+                elif "trends" in r:
+                    print(f"  [{name}] {r['trend_count']} trends, {r['tweet_count']} tweets", file=sys.stderr)
                 else:
                     print(f"  [{name}] Done", file=sys.stderr)
 

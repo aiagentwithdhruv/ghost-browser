@@ -370,15 +370,17 @@ python3 orchestrator.py --list
 | `monkeytype` | Speed typing demo (~400 WPM) |
 | `github` | Browse GitHub trending repos |
 | `hackernews` | Read top Hacker News stories |
+| `twitter` | Scrape Twitter/X trending topics & tweets |
 
 ### Pre-built Combos
 
 | Combo | Agents |
 |:---|:---|
 | `demo` | monkeytype, github, hackernews |
-| `research` | linkedin-feed, indeed, github |
+| `research` | linkedin-feed, indeed, github, twitter |
 | `lead-gen` | linkedin-feed, gmaps, indeed |
-| `full` | linkedin-engage, indeed, gmaps, github, hackernews |
+| `social` | linkedin-feed, twitter, hackernews |
+| `full` | linkedin-engage, indeed, gmaps, github, hackernews, twitter |
 
 ### How It Works
 
@@ -415,6 +417,7 @@ Turn Ghost Browser into an **MCP server** so any AI agent can control it:
 | `scrape_url` | Scrape any website |
 | `scrape_indeed` | Scrape Indeed jobs |
 | `scrape_gmaps` | Scrape Google Maps businesses |
+| `scrape_twitter` | Scrape Twitter/X trends & tweets |
 | `typing_demo` | Run MonkeyType speed test |
 | `screenshot` | Screenshot any URL |
 | `multi_run` | Run multiple agents in parallel |
@@ -427,9 +430,9 @@ Works with **Claude Code, Claude Desktop, Cursor, Codex** — any MCP client.
 
 ```
 ghost-browser/
-├── orchestrator.py           Multi-agent orchestrator (7 agents, 4 combos)
+├── orchestrator.py           Multi-agent orchestrator (8 agents, 5 combos)
 ├── multi_context.py          Isolated browser session manager
-├── ghost_mcp.py              MCP server (9 tools for any AI agent)
+├── ghost_mcp.py              MCP server (10 tools for any AI agent)
 │
 ├── base_browser.py           Playwright base class (context manager)
 ├── human_behavior.py         Anti-detection engine (v2: mouse drift, idle, warmup)
