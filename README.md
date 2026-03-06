@@ -341,12 +341,98 @@ Never be generic ("Great post!"). Sound like a real person."""
 
 ---
 
+## v2.0 — Multi-Agent Orchestrator
+
+**NEW in v2.0:** Run multiple browser agents simultaneously, each in its own isolated context.
+
+```bash
+# Run 3 agents at once (MonkeyType + GitHub + Hacker News)
+python3 orchestrator.py --demo --visible
+
+# LinkedIn feed + Indeed jobs + Google Maps scraping
+python3 orchestrator.py --combo lead-gen --visible
+
+# Custom agent mix
+python3 orchestrator.py --agents linkedin-engage,indeed,github --visible
+
+# List all agents and combos
+python3 orchestrator.py --list
+```
+
+### Available Agents
+
+| Agent | What It Does |
+|:---|:---|
+| `linkedin-feed` | Scroll LinkedIn feed, extract posts |
+| `linkedin-engage` | Like AI-related posts with human behavior |
+| `indeed` | Scrape Indeed job listings |
+| `gmaps` | Scrape Google Maps businesses |
+| `monkeytype` | Speed typing demo (~400 WPM) |
+| `github` | Browse GitHub trending repos |
+| `hackernews` | Read top Hacker News stories |
+
+### Pre-built Combos
+
+| Combo | Agents |
+|:---|:---|
+| `demo` | monkeytype, github, hackernews |
+| `research` | linkedin-feed, indeed, github |
+| `lead-gen` | linkedin-feed, gmaps, indeed |
+| `full` | linkedin-engage, indeed, gmaps, github, hackernews |
+
+### How It Works
+
+Each agent runs in its own **isolated Playwright BrowserContext** — separate cookies, localStorage, viewport, and session. One Chrome process, multiple independent agents. The audience sees multiple browser windows open at once, each doing its own thing.
+
+---
+
+## v2.0 — MCP Server
+
+Turn Ghost Browser into an **MCP server** so any AI agent can control it:
+
+```json
+{
+    "mcpServers": {
+        "ghost-browser": {
+            "command": "python3",
+            "args": ["/path/to/ghost_mcp.py"],
+            "env": {
+                "LINKEDIN_LI_AT": "your_cookie_here",
+                "OPENAI_API_KEY": "sk-..."
+            }
+        }
+    }
+}
+```
+
+### MCP Tools Exposed
+
+| Tool | What It Does |
+|:---|:---|
+| `linkedin_feed` | Get LinkedIn feed posts |
+| `linkedin_post` | Create a LinkedIn post |
+| `linkedin_engage` | Like posts with human behavior |
+| `scrape_url` | Scrape any website |
+| `scrape_indeed` | Scrape Indeed jobs |
+| `scrape_gmaps` | Scrape Google Maps businesses |
+| `typing_demo` | Run MonkeyType speed test |
+| `screenshot` | Screenshot any URL |
+| `multi_run` | Run multiple agents in parallel |
+
+Works with **Claude Code, Claude Desktop, Cursor, Codex** — any MCP client.
+
+---
+
 ## Project Structure
 
 ```
 ghost-browser/
+├── orchestrator.py           Multi-agent orchestrator (7 agents, 4 combos)
+├── multi_context.py          Isolated browser session manager
+├── ghost_mcp.py              MCP server (9 tools for any AI agent)
+│
 ├── base_browser.py           Playwright base class (context manager)
-├── human_behavior.py         Anti-detection engine
+├── human_behavior.py         Anti-detection engine (v2: mouse drift, idle, warmup)
 │
 ├── linkedin_browser.py       LinkedIn read + write operations
 ├── linkedin_engage.py        LinkedIn CLI (feed, post, engage, apply, connect)
@@ -363,6 +449,7 @@ ghost-browser/
 ├── monkeytype_flex.py        Speed typing demo (400+ WPM)
 ├── job_research.py           Job market research
 │
+├── results/                  Orchestrator run outputs (JSON)
 ├── assets/                   Screenshots
 ├── requirements.txt          Dependencies
 └── .env.example              Credential template
